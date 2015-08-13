@@ -6,7 +6,7 @@ var app = app || {};
 app.LinkAreaView = Backbone.View.extend({
 	model:null,//not a native property, but makes sense here. Will be set.
 	el:false, //makes the outer element of your template the el
-	template:_.template('<div class="linkArea">Target:<% if(target){print(target.id)}%><%=width%><button class="removeLinkArea">x</button></div>'),
+	template:_.template('<div class="linkArea"><%=width%><button class="removeLinkArea">x</button></div>'),
 	serialize:function(){
 		  return this.model.attributes;
 	},
@@ -40,9 +40,9 @@ app.LinkAreaView = Backbone.View.extend({
 		
 		this.model.trigger("destroy",this.model, this.model.collection,{});
 	},
-	setupSetTarget:function(event){
+	/*setupSetTarget:function(event){
 		this.insertView("",new app.TargetListView({model:app.project, sourceModel:this.model})).render();
 	},
-	setTarget:function(targetModel){	}
+	setTarget:function(targetModel){	}*/
 });
 
