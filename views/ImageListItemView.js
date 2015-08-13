@@ -1,5 +1,4 @@
-
-//render part for image subviews
+//render container for image subviews
 //controls for loading images
 
 var app = app || {};
@@ -12,7 +11,6 @@ app.ImageListItemView = Backbone.View.extend({
 	events: {
 		'click button.removeMockup': 'destroyModel',
 		'click':'selectMockup' 
-		
 	},
 	initialize:function(){
 		this.listenTo(this.model, 'destroy', this.remove);
@@ -29,7 +27,7 @@ app.ImageListItemView = Backbone.View.extend({
 		console.log("after render list item")
 	},
 	selectMockup:function(event){
-		app.trigger("imageListSelection", this.model);
+		app.trigger("imageListSelection", this.model); //app wide event: image selected
 	},
 	destroyModel:function(event){
 		event.stopPropagation();

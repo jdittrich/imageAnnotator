@@ -1,1 +1,21 @@
+#imageMainView{
+	position: relative;
+}
 
+
+.currentImageView{
+	width:200px;
+	height:200px;
+	position: absolute;
+	top:0;
+	left:0;
+}
+
+.linkArea{
+	position: absolute;
+	background-color: rgba(128, 255, 0, 0.24)
+}
+
+.ui-resizable{
+	position: absolute; /*resizabel usually has relative. This overwites it.*/
+}
