@@ -12,7 +12,7 @@ app.ImageMainView = Backbone.View.extend({
 	model: null, //not a native property, but makes sense here. Will be set.
 	el: false, //makes the outer element of your template the el
 	//template:_.template('<div id="mainViewport"><div class="currentImageView"><img draggable="false" src="<%= filename %>" /></div></div>'),
-	template: _.template('<div class="currentImageView"><img draggable="false" src="<%= filename %>" /></div>'),
+	template: _.template('<div class="mainViewImage"><div class="tools"><input type="radio" id="toolbar-hand" name="radio"><label for="toolbar-hand">Hand</label><input type="radio" id="toolbar-addAnnotation" name="radio"><label for="toolbar-addAnnotation">Add Annotation</label></div><div class="imageViewport"><div class="currentImageView"><img draggable="false" src="<%= filename %>" /></div></div></div>'),
 	serialize: function () {
 		return this.model.attributes;
 	},
@@ -25,11 +25,14 @@ app.ImageMainView = Backbone.View.extend({
 		this.listenTo(this.model, 'add:linkSources', this.displayNewLinkArea); //new link areas will be added via the addLinkArea function
 	},
 	afterRender: function () {
-		//UI SETUP
+		//ELEMENT SHORTCUTS
 
+
+		//UI SETUP
+		this.$el.find(".tools").buttonset();
 
 		// BEHAVIOUR SETUP
-		this.$el.drawrects({
+		this.$el.find(".currentImageView").drawrects({
 			removeElement: true,
 			distance: 5,
 			allowSelector: "." + this.$el.attr("class")
@@ -41,7 +44,7 @@ app.ImageMainView = Backbone.View.extend({
 		//possible fix: set one dimension (h or w) of the image in css.
 
 
-		var $panzoom = this.$panzoom = this.$el.panzoom(); //for testing purposes: can be deactivated via: $(".currentImageView").panzoom("disable");
+		var $panzoom = this.$panzoom = this.$el.find(".currentImageView").panzoom(); //for testing purposes: can be deactivated via: $(".currentImageView").panzoom("disable");
 
 		$panzoom.on('mousewheel.focal', function (e) { //sets up zoom-to-coursor
 			e.preventDefault();
@@ -70,5 +73,18 @@ app.ImageMainView = Backbone.View.extend({
 		this.insertView("", new app.LinkAreaView({
 			model: newModel
 		})).render();
-	}
+	},
+	states: { //in this case: states could be named "tools", but I thought I give it a generic name, so I know I can changes the store the states in the stage prperty.
+		hand:{
+			enter:function(){
+
+			},
+			exit:function(){}
+		},//the pan/zoom state
+		addAnnotations:{
+			enter:function(){},
+			exit:function(){}
+		}
+	},
+	changeState:function(state){}
 });
