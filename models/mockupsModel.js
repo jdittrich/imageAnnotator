@@ -25,7 +25,8 @@ app.Mockup = Backbone.RelationalModel.extend({
 	}],
 	defaults:function(){
 		return{
-			image: '',
+			filename: '',
+			fullpath:'',
 			title: 'No title',
 			id:('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 			var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
@@ -50,6 +51,7 @@ app.LinkSource = Backbone.RelationalModel.extend({
 		return{
 		left:0,
 		top:0,
+		comment:"comment",
 		width:100,
 		height:100,
 		id:'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
