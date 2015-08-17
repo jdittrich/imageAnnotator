@@ -19,72 +19,94 @@ app.ImageMainView = Backbone.View.extend({
 	events: {
 		'click button.removeMockup': 'destroyModel',
 		'drawrectsdrawn': 'addLinkArea',
+		'click input#toolbar-hand':'setStateHand',
+		'click input#toolbar-addAnnotation':'setStateAddAnnotation',
+		'mousewheel.focal .currentImageView':'zoom'
+
 	},
 	initialize: function () {
 		this.listenTo(this.model, 'destroy', this.remove);
 		this.listenTo(this.model, 'add:linkSources', this.displayNewLinkArea); //new link areas will be added via the addLinkArea function
 	},
 	afterRender: function () {
+		var that = this;
 		//ELEMENT SHORTCUTS
-
+		this.$tools= this.$el.find(".tools");
+		this.$imageView = this.$el.find(".currentImageView");
 
 		//UI SETUP
-		this.$el.find(".tools").buttonset();
+		this.$tools.buttonset();
 
 		// BEHAVIOUR SETUP
-		this.$el.find(".currentImageView").drawrects({
+		this.$imageView.panzoom();
+
+		this.$imageView.drawrects({
 			removeElement: true,
-			distance: 5,
-			allowSelector: "." + this.$el.attr("class")
+			distance: 5
 		});
+
 		// wired bug: image zooming after "hard reset reload (shift+strg+R) works only if
 		// 1) rendering is triggered the 2nd time
 		// 2) the browser is reloaded normally again
 		// so probably: a. The HTML is rendered. b. This code executes and caches the dimensions of the dom elements c. the image is loaded and changes the dimensions of the dom elements to zoom - the caches cordinates are useless now and produce the "wrong" behaviour.
 		//possible fix: set one dimension (h or w) of the image in css.
-
-
-		var $panzoom = this.$panzoom = this.$el.find(".currentImageView").panzoom(); //for testing purposes: can be deactivated via: $(".currentImageView").panzoom("disable");
-
-		$panzoom.on('mousewheel.focal', function (e) { //sets up zoom-to-coursor
-			e.preventDefault();
-			var delta = e.delta || e.originalEvent.wheelDelta;
-			var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
-			console.log(e.clientX, e)
-			$panzoom.panzoom('zoom', zoomOut, {
-				increment: 0.1,
-				animate: false,
-				focal: e
-			});
-		});
 	},
 	beforeRender: function () {
 		var that = this;
 		that.model.get("linkSources").each(function (element, index, list) {
-			that.insertView("", new app.LinkAreaView({
+			that.insertView(".currentImageView", new app.LinkAreaView({
 				model: element
 			}));
 		}, that);
+	},
+	zoom:function (e) { //sets up zoom-to-coursor
+		e.preventDefault();
+		var delta = e.delta || e.originalEvent.wheelDelta;
+		var zoomOut = delta ? delta < 0 : e.originalEvent.deltaY > 0;
+		this.$imageView.panzoom('zoom', zoomOut, {
+			increment: 0.1,
+			animate: false,
+			focal: e
+		});
 	},
 	addLinkArea: function (event, model) {
 		this.model.get("linkSources").add(model);
 	},
 	displayNewLinkArea: function (newModel) {
-		this.insertView("", new app.LinkAreaView({
+		this.insertView(".currentImageView", new app.LinkAreaView({
 			model: newModel
 		})).render();
 	},
+	setStateHand:function(){
+		this.$imageView.drawrects("disable");
+		this.$imageView.panzoom("enable");
+	},
+	setStateAddAnnotation:function(){
+		this.$imageView.panzoom("disable");
+		this.$imageView.drawrects("enable");
+	},
+	/*currentState:null,
 	states: { //in this case: states could be named "tools", but I thought I give it a generic name, so I know I can changes the store the states in the stage prperty.
 		hand:{
 			enter:function(){
-
+				this.$imageView.panzoom("enable");
 			},
-			exit:function(){}
+			exit:function(){
+				this.$imageView.panzoom("disable")
+			}
 		},//the pan/zoom state
 		addAnnotations:{
-			enter:function(){},
-			exit:function(){}
+			enter:function(){
+				this.$imageView.drawrects("enable")
+			},
+			exit:function(){
+				this.$imageView.drawrects("disable")
+			}
 		}
 	},
-	changeState:function(state){}
+	changeState:function(newState){
+		this.states[this.currentState].exit();
+		this.states[newState].enter();
+		this.currentState=newState;
+	}*/
 });
