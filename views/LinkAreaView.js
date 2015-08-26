@@ -11,9 +11,7 @@ app.LinkAreaView = Backbone.View.extend({
 		  return this.model.attributes;
 	},
 	events: {
-		'click button.removeLinkArea': 'destroyModel',
-		//'click button.setTarget':'setupSetTarget' //this was meant for linking, now we may want
-	//several links and/or just some text
+		'click button.removeLinkArea': 'destroyModel'
 	},
 	initialize:function(){
 		this.listenTo(this.model, 'destroy', this.remove);
@@ -22,6 +20,9 @@ app.LinkAreaView = Backbone.View.extend({
 	beforeRender:function(){},
 	afterRender:function(){
 		var that = this;
+
+		//setup shortcut properties
+		that.$editbutton = that.$el.find('button.makeEditable');
 
 		//set the position and dimensions using the model data
 		//---------------------------------------------------
@@ -39,40 +40,57 @@ app.LinkAreaView = Backbone.View.extend({
 		//Init reziable
 
 		that.$el.resizable({
-			containment: "parent"
+			containment: "parent",
+			resize: function( event, ui ) {
+				event.stopImmediatePropagation()//otherwise the background image will move along
+			}
 		});
 
 
 		//Init draggable
-
+		var pointerY;
+		var pointerX;
 		that.$el.draggable({
 			start:function(event,ui){
-				ui.position.left = 0;
-				ui.position.top = 0;
-				console.log("dragstart")
+				var zoomScale = that.el.getBoundingClientRect().width / that.el.offsetWidth;
+
+				pointerY = (event.pageY - $('body').offset().top) / zoomScale - parseInt($(event.target).css('top'));
+				pointerX = (event.pageX - $('body').offset().left) / zoomScale - parseInt($(event.target).css('left'));
+
+/*				ui.originalPosition.left = ui.offset.left / 10
+				ui.originalPosition.top =  ui.offset.left / 10*/
+
+				console.log("START:",ui.offset.left, " zoom:",zoomScale);
+
 			},
-			drag: function(event, ui) {//scaling fix: http://stackoverflow.com/questions/10212683/jquery-drag-resize-with-css-transform-scale
-				var zoomScale = that.el.getBoundingClientRect().width / that.el.offsetWidth; // http://stackoverflow.com/questions/5603615/get-the-scale-value-of-an-element
-				var changeLeft = ui.position.left - ui.originalPosition.left; // find change in left
-				var newLeft = ui.originalPosition.left + (changeLeft / zoomScale); // adjust new left by our zoomScale
+			drag: function(event, ui) {
+				//http://stackoverflow.com/questions/26180910/jquery-ui-drag-operation-on-zoomed-container-jumps-on-first-mouse-move
+				var zoomScale = that.el.getBoundingClientRect().width / that.el.offsetWidth; //scaling fix: http://stackoverflow.com/questions/10212683/jquery-drag-resize-with-css-transform-scale
 
-				var changeTop = ui.position.top - ui.originalPosition.top; // find change in top
-				var newTop = ui.originalPosition.top + (changeTop / zoomScale); // adjust new top by our zoomScale
+				var canvasTop = $('body').offset().top;
+				var canvasLeft = $('body').offset().left;
+				var canvasHeight = $('body').height();
+				var canvasWidth = $('body').width();
 
-				ui.position.left = newLeft;
-				ui.position.top = newTop;
+
+				ui.position.top = Math.round(((event.pageY - canvasTop) / zoomScale) - pointerY);
+				ui.position.left = Math.round(((event.pageX - canvasLeft) / zoomScale) - pointerX);
+
+				event.stopImmediatePropagation(); //to prevent moving the background when dragging the element
 			}
 		});
 
+		that.$el.draggable("disable"); //newly drawn elements are not draggable, only resizable preventing hassle when drawing (accidently) on top of each other
+
 		//Init edit comment function
-		that.$el.find(".areaComment").editable("dblclick", function(e){
+		that.$el.find(".areaComment").editable({trigger:that.$editbutton}, function(e){
 				that.changeComment(e.value);
 		});
 
 		// USER ERROR PREVENTION
 		//----------------------
 
-		////deletes if the area is very small and probably was only created by accident
+		//deletes if the area is very small and probably was only created by accident
 		if(that.model.get("width")<10||that.model.get("height")<10){ //deletes if the area is very small and probably was only created by accident
 			that.destroyModel();
 			return; //TODO programming debt: multiple exits: bad

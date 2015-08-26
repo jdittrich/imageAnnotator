@@ -38,7 +38,13 @@ app.ImageMainView = Backbone.View.extend({
 		this.$tools.buttonset();
 
 		// BEHAVIOUR SETUP
-		this.$imageView.panzoom();
+		this.$imageView.panzoom({
+			onStart:function(e,panzoom,event){ //event is the actual starting event argument (not sure about other differences to e here)
+				if(event.target !== panzoom.elem){
+					return false;
+				}
+			}
+		});
 
 		this.$imageView.drawrects({
 			removeElement: true,
@@ -78,12 +84,18 @@ app.ImageMainView = Backbone.View.extend({
 		})).render();
 	},
 	setStateHand:function(){
+		this.$imageView.removeClass("state-addAnnotation");
+		this.$imageView.addClass("state-hand");
 		this.$imageView.drawrects("disable");
 		this.$imageView.panzoom("enable");
+		this.$imageView.find(".ui-draggable").draggable("enable").resizable("enable");
 	},
 	setStateAddAnnotation:function(){
+		this.$imageView.removeClass("state-hand");
+		this.$imageView.addClass("state-addAnnotation");
 		this.$imageView.panzoom("disable");
 		this.$imageView.drawrects("enable");
+		this.$imageView.find(".ui-draggable").draggable("disable").resizable("disable");
 	},
 	/*currentState:null,
 	states: { //in this case: states could be named "tools", but I thought I give it a generic name, so I know I can changes the store the states in the stage prperty.

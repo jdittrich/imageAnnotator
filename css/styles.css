@@ -1,14 +1,21 @@
 #imageMainView{
 	position: relative;
+	overflow: hidden;
+	width:80%;
+	height:80%;
 }
 
 
 .currentImageView{
-	width:200px;
-	height:200px;
-	position: absolute;
-	top:0;
-	left:0;
+	display:table; /*shrinkwrap contained image*/
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.currentImageView>img{
+	pointer-events: none;
 }
 
 .linkArea{
@@ -18,4 +25,16 @@
 
 .ui-resizable{
 	position: absolute; /*resizabel usually has relative. This overwites it.*/
+}
+
+.imageViewport{
+	position: relative;
+	overflow: hidden;
+	width:100%;
+	height:100%;
+}
+
+#mainViewImage{
+	width:80%;
+	height:80%;
 }
