@@ -1,14 +1,13 @@
-//renders
-//the current main image
-//sorta the viewport of the app
+var _ = require("underscore");
+$ = jQuery = require("jquery");
+var Backbone = require("backbone");
+var Panzoom = require("libs/jquerypanzoom")
 
+var LinkAreaView = require("views/ChoosenAreaView");
 
-"use strict";
+//TODO: common.js-ify
 
-
-var app = app || {};
-
-app.ImageMainView = Backbone.View.extend({
+var ImageMainView = Backbone.View.extend({
 	model: null, //not a native property, but makes sense here. Will be set.
 	el: false, //makes the outer element of your template the el
 	//template:_.template('<div id="mainViewport"><div class="currentImageView"><img draggable="false" src="<%= filename %>" /></div></div>'),
@@ -60,7 +59,7 @@ app.ImageMainView = Backbone.View.extend({
 	beforeRender: function () {
 		var that = this;
 		that.model.get("linkSources").each(function (element, index, list) {
-			that.insertView(".currentImageView", new app.LinkAreaView({
+			that.insertView(".currentImageView", new LinkAreaView({
 				model: element
 			}));
 		}, that);
@@ -79,7 +78,7 @@ app.ImageMainView = Backbone.View.extend({
 		this.model.get("linkSources").add(model);
 	},
 	displayNewLinkArea: function (newModel) {
-		this.insertView(".currentImageView", new app.LinkAreaView({
+		this.insertView(".currentImageView", new LinkAreaView({
 			model: newModel
 		})).render();
 	},

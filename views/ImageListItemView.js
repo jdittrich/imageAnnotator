@@ -1,10 +1,11 @@
 //render container for image subviews
 //controls for loading images
 
-var app = app || {};
+var _ = require("underscore");
+$ = jQuery = require("jquery");
+var Backbone = require("backbone");
 
-
-app.ImageListItemView = Backbone.View.extend({
+var ImageListItemView = Backbone.View.extend({
 	model:null,//not a native property, but makes sense here. Will be set.
 	el:false, //makes the outer element of your template the el
 	template:_.template('<li> <%= id %> <button class="removeMockup">remove</button></li>'),
@@ -27,10 +28,13 @@ app.ImageListItemView = Backbone.View.extend({
 		console.log("after render list item")
 	},
 	selectMockup:function(event){
-		app.trigger("imageListSelection", this.model); //app wide event: image selected
+		//app.trigger("imageListSelection", this.model); //app wide event: image selected
 	},
 	destroyModel:function(event){
 		event.stopPropagation();
 		this.model.trigger("destroy",this.model, this.model.collection,{});
 	}
 });
+
+
+module.exports = ImageListItemView;
