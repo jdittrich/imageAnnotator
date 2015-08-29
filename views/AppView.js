@@ -18,7 +18,7 @@ var AppView = Backbone.View.extend({
 	},
 	beforeRender:function(view){
 		//app.viewportView = this.insertView("",new app.ViewportView());
-		this.setView("#imageList",new ImageListView({model:model}));//List displays all Mockups
+		this.setView("#imageList",new ImageListView({model:this.model}));//List displays all Mockups
 	},
 	/*displayMockupView:function(model){
 		this.setView("#MainView", new app.ImageMainView({model:model})).render() //TODO: called by whom?

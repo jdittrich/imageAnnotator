@@ -5,7 +5,7 @@ var Panzoom = require("libs/jquerypanzoom")
 
 var LinkAreaView = require("views/ChoosenAreaView");
 
-//TODO: common.js-ify
+
 
 var ImageMainView = Backbone.View.extend({
 	model: null, //not a native property, but makes sense here. Will be set.

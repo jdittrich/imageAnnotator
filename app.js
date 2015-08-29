@@ -21,6 +21,8 @@ $(function() {
 		model:new ProjectModel()
 	})
 	
+	appView.render();
+
 	/*if(typeof process  !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined'){
 		require("forElectron/electron_appIntegration")();
 	}*/

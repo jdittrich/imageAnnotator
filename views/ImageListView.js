@@ -15,12 +15,12 @@ var ImageListView = Backbone.View.extend({
 	initialize:function(){
 		//this needs to be adjusted according to the environment: Browser or nw.js/electron. Both use the input type=file element; The access to the image content is different though.
 		//for now we use just the name of the file and assume/demand that it is located aside (or, with some adjustments in the model, below) the index.html!
-		this.listenTo(this.model.get("mockups"),"add",this.displayNewListItem)
+		this.listenTo(this.model.get("images"),"add",this.displayNewListItem)
 	},
 	beforeRender:function(view){
 		//alle Bilder Rendern als Liste
 		var that = this;
-		_.each(that.model.get("mockups"),function(element,index,list) {
+		_.each(that.model.get("images"),function(element,index,list) {
 			that.insertView("",new ImageListItemView({model:element}));//adapt this!
 		}, that);
 	},
@@ -35,7 +35,7 @@ var ImageListView = Backbone.View.extend({
 	newMockupModel:function(event){
 		var filename = $(event.target).val().replace(/.*(\/|\\)/, '');
 		if(filename.length>0){ //prevent against empty values
-			this.model.get("mockups").add({filename:filename});
+			this.model.get("images").add({filename:filename});
 		}
 	}
 });
