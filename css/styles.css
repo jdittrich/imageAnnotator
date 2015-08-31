@@ -27,6 +27,10 @@
 	position: absolute; /*resizabel usually has relative. This overwites it.*/
 }
 
+.drawingRect{
+	outline:1px solid rgba(0,0,0,0.5);
+}
+
 .imageViewport{
 	position: relative;
 	overflow: hidden;

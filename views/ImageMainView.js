@@ -1,11 +1,16 @@
 var _ = require("underscore");
 $ = jQuery = require("jquery");
 var Backbone = require("backbone");
-var Panzoom = require("libs/jquerypanzoom")
+require("../libs/jqueryUI")
 
-var LinkAreaView = require("views/ChoosenAreaView");
+var Panzoom = require("../libs/jquerypanzoom")
+var DrawRects = require("../libs/drawRects-JqueryUi");
+
+var LinkAreaView = require("./ChoosenAreaView");
 
 
+
+//uses app.eventBus (Global)
 
 var ImageMainView = Backbone.View.extend({
 	model: null, //not a native property, but makes sense here. Will be set.
@@ -25,40 +30,50 @@ var ImageMainView = Backbone.View.extend({
 	},
 	initialize: function () {
 		this.listenTo(this.model, 'destroy', this.remove);
-		this.listenTo(this.model, 'add:linkSources', this.displayNewLinkArea); //new link areas will be added via the addLinkArea function
+		this.listenTo(this.model, 'add:choosenAreas', this.displayNewLinkArea); //new link areas will be added via the addLinkArea function
 	},
 	afterRender: function () {
 		var that = this;
 		//ELEMENT SHORTCUTS
 		this.$tools= this.$el.find(".tools");
 		this.$imageView = this.$el.find(".currentImageView");
+		this.$image = this.$el.find(".currentImageView > img");
 
 		//UI SETUP
 		this.$tools.buttonset();
 
 		// BEHAVIOUR SETUP
-		this.$imageView.panzoom({
-			onStart:function(e,panzoom,event){ //event is the actual starting event argument (not sure about other differences to e here)
-				if(event.target !== panzoom.elem){
-					return false;
+		//should be a function, since we want to call it in an event (or not)
+		var setupPanzoom = function(){
+			that.$imageView.panzoom({
+				onStart:function(e,panzoom,event){ //event is the actual starting event argument (not sure about other differences to e here)
+					if(event.target !== panzoom.elem){
+						return false;
+					}
 				}
-			}
-		});
+			});
+		}
 
+		//setup directly or wait until loaded. In particular this is needed because in choromium, the zoom-to-focalpoint will fail if panzoom is initialized when the image has not been loaded
+		if(this.$image.prop('complete')){
+			setupPanzoom();
+		} else {
+			this.$image.load(function(){
+				setupPanzoom();
+			});
+		}
+		//MINOR BUG: All is pixely when scaling up http://stackoverflow.com/questions/25590315/why-is-transition-on-transform-scale-makes-an-element-become-pixelated-in-w
+
+
+		//enable the choose areas function
 		this.$imageView.drawrects({
 			removeElement: true,
 			distance: 5
 		});
-
-		// wired bug: image zooming after "hard reset reload (shift+strg+R) works only if
-		// 1) rendering is triggered the 2nd time
-		// 2) the browser is reloaded normally again
-		// so probably: a. The HTML is rendered. b. This code executes and caches the dimensions of the dom elements c. the image is loaded and changes the dimensions of the dom elements to zoom - the caches cordinates are useless now and produce the "wrong" behaviour.
-		//possible fix: set one dimension (h or w) of the image in css.
 	},
 	beforeRender: function () {
 		var that = this;
-		that.model.get("linkSources").each(function (element, index, list) {
+		that.model.get("choosenAreas").each(function (element, index, list) {
 			that.insertView(".currentImageView", new LinkAreaView({
 				model: element
 			}));
@@ -75,7 +90,7 @@ var ImageMainView = Backbone.View.extend({
 		});
 	},
 	addLinkArea: function (event, model) {
-		this.model.get("linkSources").add(model);
+		this.model.get("choosenAreas").add(model);
 	},
 	displayNewLinkArea: function (newModel) {
 		this.insertView(".currentImageView", new LinkAreaView({
@@ -97,7 +112,7 @@ var ImageMainView = Backbone.View.extend({
 		this.$imageView.find(".ui-draggable").draggable("disable").resizable("disable");
 	},
 	/*currentState:null,
-	states: { //in this case: states could be named "tools", but I thought I give it a generic name, so I know I can changes the store the states in the stage prperty.
+	states: { //in this case: states could be named "tools", but I thought I give it a generic name, so I know I can changes the store the states in the stage property.
 		hand:{
 			enter:function(){
 				this.$imageView.panzoom("enable");
@@ -121,3 +136,6 @@ var ImageMainView = Backbone.View.extend({
 		this.currentState=newState;
 	}*/
 });
+
+
+module.exports = ImageMainView;

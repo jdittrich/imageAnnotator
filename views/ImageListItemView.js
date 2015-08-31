@@ -1,9 +1,13 @@
 //render container for image subviews
 //controls for loading images
 
+//uses these via require
 var _ = require("underscore");
 $ = jQuery = require("jquery");
 var Backbone = require("backbone");
+
+//...as well as app.eventBus (Global)
+
 
 var ImageListItemView = Backbone.View.extend({
 	model:null,//not a native property, but makes sense here. Will be set.
@@ -28,7 +32,7 @@ var ImageListItemView = Backbone.View.extend({
 		console.log("after render list item")
 	},
 	selectMockup:function(event){
-		//app.trigger("imageListSelection", this.model); //app wide event: image selected
+		app.eventBus.trigger("imageListSelection", this.model); //app wide event: image selected
 	},
 	destroyModel:function(event){
 		event.stopPropagation();

@@ -13,6 +13,9 @@ Layoutmanager.configure({
 	manage:true
 });
 
+window.app = {}
+window.app.eventBus = _.extend({}, Backbone.Events);
+
 $(function() {
   //so we broker events on the app object
 	//_.extend(app, Backbone.Events);
@@ -26,7 +29,6 @@ $(function() {
 	/*if(typeof process  !== 'undefined' && typeof process.versions !== 'undefined' && typeof process.versions.electron !== 'undefined'){
 		require("forElectron/electron_appIntegration")();
 	}*/
-
 	app.config={
 		
 	}
