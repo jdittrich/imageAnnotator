@@ -40,46 +40,17 @@ var path = require("path");
 
 var setContent = null; //function to set the content appear in the document. Set externally
 var getContent = null; //function to retrieve the content to be saved. Set externally
-var failureDisplayer = null //function to display error messages for the user. Set externally
+var failureDisplayer = null; //function to display error messages for the user. Set externally
 var indexPath = null; //path of the index.html
-var executeOnRemoteWindowReady = function(){};
-
-
-// API: Filemanager
-var filepath = null, //the path of the currently opened file
-	setContent = null, //function to insert the content to be opened. Set externally
-	failureMassager = null;
-
-//messages
-var loadedMessage= "fileloader:status:initialized";
-var triggerOpen = "fileloader:action:open";
+var filepath = null; //the path of the currently opened file
 
 //set up event handler
 if (typeof window.onbeforeunload === 'function') {
 	//it seems to be already set
 	console.log("window.onbeforeunload already set. Caution: Window may be closed without save messagebox")
 } else {
-	window.onbeforeunload = closeHandler;
+	window.onbeforeunload = exitApplicationHandler;
 }
-
-window.addEventListener("message", function(event){
-	// event.source is popup-window, event.data is the message, event.origin the url of the window sending the message (check this for additional  security!)
-
-	if(event.origin !== indexPath){
-		return;
-	}
-
-	var message = JSON.parse(event.data);
-
-	if(message.type===loadedMessage){
-		executeOnRemoteWindowReady();
-	}
-	if(message.type === triggerOpen){
-		remoteSetContentAfterOpen(message.path);
-	}
-}, false);
-
-
 
 
 // SAVE
@@ -93,20 +64,55 @@ function userSavesHandler() {
 	}
 }
 
-// OPEN get path to the file-to-open, pass it to the newWindowWithContent function.
+
+function checkContentChange(options){
+//options: hasChanged-Callback-Function, hasNotChanged-Callback-Function, filepath, getContent
+
+	var savedContent = null;
+	var currentContent = options.getContent();
+
+	fs.readFile(options.filepath, function (err, data) {
+			if (err) {
+				console.log("Read failed: " + err);
+			}
+			savedContent = data;
+			if (savedContent !== currentContent) {
+				options.hasChanged(savedContent, currentContent);
+			} else {
+				options.hasNotChanged(savedContent);
+			}
+	})
+}
+
+
+
+
+/*// OPEN get path to the file-to-open, pass it to the newWindowWithContent function.
 function userOpensHandler() {
 	dialog.showOpenDialog({
 		properties: ['openFile']
 	}, function (filepathArg) {
+	//TODO: Open here
+	}
+}*/
 
-		var newWindow = window.open(indexPath);
-		executeOnRemoteWindowReady = function(){
-			newWindow.postMessage({type:triggerOpen,path:filepathArg}, window.document.URL);
-		};
+// FUTURE FUNCTION
+//execute this when window ready to open files
+/*
+ipc.send "fileloaderReady"
 
-		newWindowWithContent(filepathArg,indexPath);
-	});
-}
+*/
+
+//FUTURE FUNCTON execute this when new window said its ready to open files:
+//send filepath
+/*
+senderwindow.send(filepath)
+
+*/
+
+//FUTURE FUNCTION execute when filepath was recieved, load file.
+
+
 
 function savePathChosenHandler(filepathArg) {
 	filepath = filepathArg;
@@ -121,12 +127,16 @@ function userNewHandler() {
 	window.open(indexPath);
 }
 
-function closeHandler(e) {
+function exitApplicationHandler(){
+	return closeHandler();
+}
+
+function closeHandler(e) {//called if file is unloaded or if the application should be closed.
 	/// ask if file ought to be saved. If yes, save, then close.
 	var currentContent = getContent(),
 		  savedContent = null;
 
-	if (!filepath) { //if the file never has been saved, ask if it should be saved before closing right away
+	if (!filepath) { //if the file 	never has been saved, ask if it should be saved before closing right away
 		closeHandlerDialog();
 	} else { //if the file has been saved, check if it has changed since the last save
 		fs.readFile(filepath, function (err, data) {
@@ -172,33 +182,22 @@ function writeToFile(filepathArg) {
 	});
 }
 
-function newWindowWithContent(filepathArg,indexPath) {
-	var windowWithContent = window.open(indexPath);
+function handleChanges(ifChangedFunc, ifUnchangedFunc){
 
+	var currentContent = getContent();
 
-	windowWithContent.postMessage({type:triggerOpen,path:filepathArg}, window.document.URL);
-
-	//windowWithContent.eval('filemanager.remoteSetContent("' + filepathArg + '")'); //TODO uh, eval... Is there an alternative? We could send messages, but I am unsure if this would be better.//runs the remoteSetContent which is part of filemanager.
-	//}, true);
-}
-
-//never called from the same script; called in a newly opened window, triggered from the parent window
-function remoteSetContentAfterOpen(filepathArg) {
-	var hasExecuted = false; //closure variable
-
-	if (!hasExecuted) { //if never executed before (aka if hasExecuted has still the value it was initialized with)
-		hasExecuted = true; //set it to true to prevent execution next time
-		filepath = filepathArg;
-		fs.readFile(filepathArg, function (err, data) {
-			if (err) {
-				console.log("Read failed: " + err);
+	fs.readFile(filepath, function (err, data) {
+		if (err) {
+			console.log("Read failed: " + err);
+		}else{ //if reading succeeded
+			if(currentContent !== data){ //data has changed since last save
+				ifChangedFunc();
+			} else { //data is unchanged to last save
+				ifUnchangedFunc();
 			}
-			setContent(data);
-		});
-	} else {
-		console.log("remoteSetContentAfterOpen can only be called once to prevent resetting content accidently")
-	}
-}
+		}
+	});
+};
 
 function defaultFailureDisplayer(string){ //if no own failure is exposed, use this one
 	console.error(string);
@@ -229,8 +228,5 @@ function setContentAccessors(contentSetterArg, contentGetterArg, indexPathArg) {
 		remoteSetContent: remoteSetContentAfterOpen
 	};
 }
-
-
-window.postMessage(loadedMessage, window.document.URL);//if this window has been opened by another ("origin") window, this other "origin" window will recieve the message
 
 exports.init = setContentAccessors;
